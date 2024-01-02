@@ -1,4 +1,4 @@
-// This is the ci/cd pipeline to deploy the app as a docker container
+// This file deploys the docker image to the minikube cluster instead of running it as a docker container.
 pipeline{
     agent any
     tools{
@@ -50,10 +50,18 @@ pipeline{
             }
         }
         
-        stage('Deploy to container'){
+        stage('Deploy to kubernetes'){
             steps{
-                sh 'docker run -d -p 8081:80 ishwarkhadka/netflix:latest'
-                
+                script{
+                    dir('Kubernetes'){
+                        kubeconfig(credentialsId: 'kubernetes', serverUrl: '') {
+                            sh 'kubectl delete pods --all'
+                            sh 'kubectl apply -f deployment.yml'
+                            sh 'kubectl apply -f service.yml'
+                        }
+                    }
+                }
+            
             }
         }
 
